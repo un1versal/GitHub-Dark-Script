@@ -8,6 +8,10 @@ This script loads and applies the [GitHub Dark](https://github.com/StylishThemes
 * Adds a monospace font toggle to comment textareas.
 * Adds a diff file view toggle to collapse or expand blocks.
 
+# Notice!
+
+**Version 2.0.0 will reset settings from older versions**.
+
 # [Installation](https://github.com/StylishThemes/GitHub-Dark-Script/wiki/Install)
 
 - Make sure to install a userscript engine like [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/), [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) or [compatible](https://github.com/StylishThemes/GitHub-Dark-Script/wiki/Install).
