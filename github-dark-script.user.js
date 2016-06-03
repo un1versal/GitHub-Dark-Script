@@ -103,6 +103,7 @@
     wrapped : `
       white-space: pre-wrap !important;
       word-break: break-all !important;
+      overflow-wrap: break-word !important;
       display: block !important;
     `,
     unwrap  : `
@@ -117,12 +118,7 @@
     /* GitHub: Enable wrapping of long code lines */
       .blob-code-inner,
       .markdown-body pre > code,
-      .markdown-body .highlight > pre {
-        white-space: pre-wrap !important;
-        word-break: break-all !important;
-        overflow-wrap: break-word !important;
-        display: block !important;
-      }
+      .markdown-body .highlight > pre { ${wrapCss.wrapped} }
       td.blob-code-inner {
         display: table-cell !important;
       }
