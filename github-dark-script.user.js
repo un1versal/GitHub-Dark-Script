@@ -144,7 +144,9 @@
 
   $style = make({
     el: 'style',
-    cl4ss: 'ghd-style'
+    cl4ss: 'ghd-style',
+    // add style tag to head
+    appendTo: 'head'
   });
 
   let timer, picker, // jscolor picker
@@ -278,7 +280,7 @@
 
   function fetchAndApplyStyle() {
     if (debug) {
-      console.log('Fetching github-dark.css');
+      console.log(`Fetching ${root}github-dark.css`);
     }
     GM_xmlhttpRequest({
       method : 'GET',
@@ -298,7 +300,7 @@
       }
       return;
     }
-    if (data.lastTheme === data.theme) {
+    if (data.lastTheme === data.theme && data.themeCss !== '') {
       return applyTheme();
     }
     let name = data.theme || 'Twilight',
@@ -369,7 +371,8 @@
     // see https://github.com/StylishThemes/GitHub-Dark/issues/275
     if (/firefox/i.test(navigator.userAgent)) {
       processed = processed
-        .replace(/select, input, textarea/, 'select, input:not([type="checkbox"]), textarea')
+        // line in github-dark.css = "select, input:not(.btn-link), textarea"
+        .replace('select, input', 'select, input:not([type="checkbox"])')
         .replace(/input\[type=\"checkbox\"\][\s\S]+?}/gm, '');
     }
     data.processedCss = processed;
@@ -435,8 +438,9 @@
     } else {
       // clear saved date
       data.version = 0;
+      data.themeCss = '';
       GM_setValue('data', data);
-      document.location.reload();
+      closePanel('forced');
     }
   }
 
@@ -512,6 +516,7 @@
     // Settings panel markup
     panel = make({
       el : 'div',
+      appendTo: 'body',
       attr : { id: 'ghd-settings' },
       html : `
         <div id="ghd-settings-inner" class="boxed-group">
@@ -586,7 +591,6 @@
         </div>
       `
     });
-    $('body').appendChild(panel);
 
     updateToggles();
   }
@@ -756,7 +760,7 @@
   }
 
   function bindEvents() {
-    let el, cb, menu, lastKey,
+    let el, menu, lastKey,
       panel = $('#ghd-settings-inner'),
       swatch = $('#ghd-swatch', panel);
 
@@ -933,12 +937,17 @@
     $('#ghd-settings').classList.add('in');
   }
 
-  function closePanel() {
+  function closePanel(flag) {
     $('#ghd-settings').classList.remove('in');
     picker.hide();
 
-    // apply changes when the panel is closed
-    updateStyle();
+    if (flag === 'forced') {
+      // forced update; partial re-initialization
+      init();
+    } else {
+      // apply changes when the panel is closed
+      updateStyle();
+    }
   }
 
   function toggleStyle() {
@@ -947,7 +956,7 @@
     $('#ghd-settings-inner .ghd-enable').checked = isEnabled;
     // add processedCss back into style (emptied when disabled)
     if (isEnabled) {
-    	// data.processedCss is empty when ghd is disabled on init
+      // data.processedCss is empty when ghd is disabled on init
       if (!data.processedCss) {
         processStyle();
       } else {
@@ -958,9 +967,6 @@
   }
 
   function init() {
-    // add style tag to head
-    $('head').appendChild($style);
-
     getStoredValues(true);
 
     $style.disabled = !data.enable;
@@ -1044,6 +1050,9 @@
           el.setAttribute(key, obj.attr[key]);
         }
       }
+    }
+    if (obj.appendTo) {
+      $(obj.appendTo).appendChild(el);
     }
     return el;
   }
