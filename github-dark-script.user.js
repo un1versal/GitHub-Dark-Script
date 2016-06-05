@@ -125,7 +125,7 @@
   `,
 
   wrapIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
+    <svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewbox="0 0 768 768">
       <path d="M544.5 352.5q52.5 0 90 37.5t37.5 90-37.5 90-90 37.5H480V672l-96-96 96-96v64.5h72q25.5 0 45-19.5t19.5-45-19.5-45-45-19.5H127.5v-63h417zm96-192v63h-513v-63h513zm-513 447v-63h192v63h-192z"/>
     </svg>
   `,
@@ -137,7 +137,7 @@
   `,
 
   fileIcon = `
-    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="10" height="6.5" viewBox="0 0 10 6.5">
+    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="10" height="6.5" viewbox="0 0 10 6.5">
       <path d="M0 1.497L1.504 0l3.49 3.76L8.505.016 10 1.52 4.988 6.51 0 1.496z"/>
     </svg>
   `,
@@ -372,7 +372,7 @@
     if (/firefox/i.test(navigator.userAgent)) {
       processed = processed
         // line in github-dark.css = "select, input:not(.btn-link), textarea"
-        .replace('select, input', 'select, input:not([type="checkbox"])')
+        .replace('select, input:not(.btn-link)', 'input { color:#eee !important; } select')
         .replace(/input\[type=\"checkbox\"\][\s\S]+?}/gm, '');
     }
     data.processedCss = processed;
@@ -461,14 +461,15 @@
       #ghd-settings p { line-height: 25px; }
       #ghd-swatch { width:25px; height:25px; display:inline-block; margin:3px 10px; border-radius:4px; }
       #ghd-settings .checkbox input { margin-top: .35em }
-      #ghd-settings input[type="text"] { border: #555 1px solid; }
+      #ghd-settings input, #ghd-settings select { border: #555 1px solid; }
+      #ghd-settings .ghd-attach { padding-right: 25px; }
       #ghd-settings input[type="checkbox"] { width: 16px !important; height: 16px !important; border-radius: 3px !important; }
       #ghd-settings .boxed-group-inner { padding: 0; }
       #ghd-settings .ghd-footer { padding: 10px; border-top: #555 solid 1px; }
       #ghd-settings .ghd-settings-wrapper { max-height: 60vh; overflow-y:auto; padding: 1px 10px; }
       #ghd-settings .ghd-tab { width: 5em; }
-      #ghd-settings .ghd-info, .ghd-file-toggle svg { vertical-align: middle !important; }
-      #ghd-settings .paste-area { position:absolute; bottom:50px; top:37px; left:2px; right:2px; width:396px; z-index:0; }
+      #ghd-settings .octicon { vertical-align:text-bottom !important; }
+      #ghd-settings .paste-area { position:absolute; bottom:50px; top:37px; left:2px; right:2px; width:396px !important; height:-moz-calc(100% - 85px); border-style:solid; z-index:0; }
 
       /* code wrap toggle: https://gist.github.com/silverwind/6c1701f56e62204cc42b
       icons next to a pre */
@@ -495,7 +496,7 @@
       .ghd-file-collapsed svg { -webkit-transform:rotate(90deg); transform:rotate(90deg); }
     `);
 
-    let panel, indx, theme,
+    let panel, indx, theme, icon,
       ver = [],
       opts = '',
       names = Object.keys(themes),
@@ -513,6 +514,13 @@
       }
     }
 
+    // circle-question-mark icon
+    icon = `
+      <svg class="octicon" xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewbox="0 0 16 14">
+        <path d="M6 10h2v2H6V10z m4-3.5c0 2.14-2 2.5-2 2.5H6c0-0.55 0.45-1 1-1h0.5c0.28 0 0.5-0.22 0.5-0.5v-1c0-0.28-0.22-0.5-0.5-0.5h-1c-0.28 0-0.5 0.22-0.5 0.5v0.5H4c0-1.5 1.5-3 3-3s3 1 3 2.5zM7 2.3c3.14 0 5.7 2.56 5.7 5.7S10.14 13.7 7 13.7 1.3 11.14 1.3 8s2.56-5.7 5.7-5.7m0-1.3C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7S10.86 1 7 1z" />
+      </svg>
+    `;
+
     // Settings panel markup
     panel = make({
       el : 'div',
@@ -521,7 +529,8 @@
       html : `
         <div id="ghd-settings-inner" class="boxed-group">
           <h3>GitHub-Dark Settings
-          <svg id="ghd-settings-close" xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="160 160 608 608"><path d="M686.2 286.8L507.7 465.3l178.5 178.5-45 45-178.5-178.5-178.5 178.5-45-45 178.5-178.5-178.5-178.5 45-45 178.5 178.5 178.5-178.5z"/></svg>
+            <a href="https://github.com/StylishThemes/GitHub-Dark-Script/wiki" class="tooltipped tooltipped-e" aria-label="See documentation">${icon}</a>
+            <svg id="ghd-settings-close" xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="160 160 608 608"><path d="M686.2 286.8L507.7 465.3l178.5 178.5-45 45-178.5-178.5-178.5 178.5-45-45 178.5-178.5-178.5-178.5 45-45 178.5 178.5 178.5-178.5z"/></svg>
           </h3>
           <div class="boxed-group-inner">
             <form>
@@ -538,27 +547,27 @@
                 <p>
                   <label>Image:</label>
                   <input class="ghd-image ghd-right" type="text">
-                  <a href="https://github.com/StylishThemes/GitHub-Dark/wiki/Image" class="tooltipped tooltipped-e" aria-label="Click to learn about GitHub\'s Content Security&#10;Policy and how to add a custom image"><sup>?</sup></a>
+                  <a href="https://github.com/StylishThemes/GitHub-Dark/wiki/Image" class="tooltipped tooltipped-e" aria-label="Click to learn about GitHub\'s Content Security&#10;Policy and how to add a custom image">${icon}</a>
                 </p>
                 <p>
                   <label>Image type:</label>
-                  <select class="ghd-type ghd-right">
+                  <select class="ghd-type ghd-right form-select">
                     <option value="tiled">Tiled</option>
                     <option value="fit">Fit window</option>
                   </select>
                 </p>
                 <p>
                   <label>Image attachment:</label>
-                  <select class="ghd-attach ghd-right">
+                  <select class="ghd-attach ghd-right form-select">
                     <option value="scroll">Scroll</option>
                     <option value="fixed">Fixed</option>
                   </select>
                 </p>
                 <h4>Code</h4>
-                <p><label>Theme:</label> <select class="ghd-theme ghd-right">${opts}</select></p>
+                <p><label>Theme:</label> <select class="ghd-theme ghd-right form-select">${opts}</select></p>
                 <p>
                   <label>Font Name:</label> <input class="ghd-font ghd-right" type="text">
-                  <a href="http://www.cssfontstack.com/" class="tooltipped tooltipped-e" aria-label="Add a system installed (monospaced) font name;&#10;this script will not load external fonts!"><sup>?</sup></a>
+                  <a href="http://www.cssfontstack.com/" class="tooltipped tooltipped-e" aria-label="Add a system installed (monospaced) font name;&#10;this script will not load external fonts!">${icon}</a>
                 </p>
                 <p>
                   <label>Tab Size:</label> <input class="ghd-tab ghd-right" type="text">
@@ -580,7 +589,7 @@
                   </div>
                 </div>&nbsp;
                 <a href="#" class="ghd-reset btn btn-sm btn-danger tooltipped tooltipped-n" aria-label="Reset to defaults;&#10;there is no undo!">Reset All Settings</a>
-                  <span class="ghd-right tooltipped tooltipped-n" aria-label="Script v${version}&#10;CSS ${(ver.length ? 'v' + ver.join('.') : 'unknown')}">
+                <span class="ghd-right tooltipped tooltipped-n" aria-label="Script v${version}&#10;CSS ${(ver.length ? 'v' + ver.join('.') : 'unknown')}">
                   <svg class="ghd-info" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24">
                     <path fill="#444" d="M12,9c0.82,0,1.5-0.68,1.5-1.5S12.82,6,12,6s-1.5,0.68-1.5,1.5S11.18,9,12,9z M12,1.5 C6.211,1.5,1.5,6.211,1.5,12S6.211,22.5,12,22.5S22.5,17.789,22.5,12S17.789,1.5,12,1.5z M12,19.5c-4.148,0-7.5-3.352-7.5-7.5 S7.852,4.5,12,4.5s7.5,3.352,7.5,7.5S16.148,19.5,12,19.5z M13.5,12c0-0.75-0.75-1.5-1.5-1.5s-0.75,0-1.5,0S9,11.25,9,12h1.5 c0,0,0,3.75,0,4.5S11.25,18,12,18s0.75,0,1.5,0s1.5-0.75,1.5-1.5h-1.5C13.5,16.5,13.5,12.75,13.5,12z"/>
                   </svg>
