@@ -125,19 +125,19 @@
   `,
 
   wrapIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewbox="0 0 768 768">
+    <svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
       <path d="M544.5 352.5q52.5 0 90 37.5t37.5 90-37.5 90-90 37.5H480V672l-96-96 96-96v64.5h72q25.5 0 45-19.5t19.5-45-19.5-45-45-19.5H127.5v-63h417zm96-192v63h-513v-63h513zm-513 447v-63h192v63h-192z"/>
     </svg>
   `,
 
   monospaceIcon = `
-    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewbox="0 0 32 32">
+    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32">
       <path d="M5.91 7.31v8.41c0 .66.05 1.09.14 1.31.09.21.23.37.41.48.18.11.52.16 1.02.16v.41H2.41v-.41c.5 0 .86-.05 1.03-.14.16-.11.3-.27.41-.5.11-.23.16-.66.16-1.3V11.7c0-1.14-.04-1.87-.11-2.2-.04-.26-.13-.42-.24-.53-.11-.1-.27-.14-.46-.14-.21 0-.48.05-.77.18l-.18-.41 3.14-1.28h.52v-.01zm-.95-5.46c.32 0 .59.11.82.34.23.23.34.5.34.82 0 .32-.11.59-.34.82-.23.22-.51.34-.82.34-.32 0-.59-.11-.82-.34s-.36-.5-.36-.82c0-.32.11-.59.34-.82.24-.23.51-.34.84-.34zm19.636 19.006h-3.39v-1.64h5.39v9.8h3.43v1.66h-9.18v-1.66h3.77v-8.16h-.02zm.7-6.44c.21 0 .43.04.63.13.18.09.36.2.5.34s.25.3.34.5c.07.18.13.39.13.61 0 .22-.04.41-.13.61s-.19.36-.34.5-.3.25-.5.32c-.2.09-.39.13-.62.13-.21 0-.43-.04-.61-.12-.19-.07-.35-.19-.5-.34-.14-.14-.25-.3-.34-.5-.07-.2-.13-.39-.13-.61s.04-.43.13-.61c.07-.18.2-.36.34-.5s.31-.25.5-.34c.17-.09.39-.12.6-.12zM2 30L27.82 2H30L4.14 30H2z"/>
     </svg>
   `,
 
   fileIcon = `
-    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="10" height="6.5" viewbox="0 0 10 6.5">
+    <svg class="octicon" xmlns="http://www.w3.org/2000/svg" width="10" height="6.5" viewBox="0 0 10 6.5">
       <path d="M0 1.497L1.504 0l3.49 3.76L8.505.016 10 1.52 4.988 6.51 0 1.496z"/>
     </svg>
   `,
@@ -516,7 +516,7 @@
 
     // circle-question-mark icon
     icon = `
-      <svg class="octicon" xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewbox="0 0 16 14">
+      <svg class="octicon" xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 16 14">
         <path d="M6 10h2v2H6V10z m4-3.5c0 2.14-2 2.5-2 2.5H6c0-0.55 0.45-1 1-1h0.5c0.28 0 0.5-0.22 0.5-0.5v-1c0-0.28-0.22-0.5-0.5-0.5h-1c-0.28 0-0.5 0.22-0.5 0.5v0.5H4c0-1.5 1.5-3 3-3s3 1 3 2.5zM7 2.3c3.14 0 5.7 2.56 5.7 5.7S10.14 13.7 7 13.7 1.3 11.14 1.3 8s2.56-5.7 5.7-5.7m0-1.3C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7S10.86 1 7 1z" />
       </svg>
     `;
@@ -580,7 +580,7 @@
                 <div class="btn-group">
                   <a href="#" class="ghd-update btn btn-sm tooltipped tooltipped-n tooltipped-multiline" aria-label="Update style if the newest release is not loading; the page will reload!">Force Update Style</a>
                   <a href="#" class="ghd-textarea-toggle btn btn-sm tooltipped tooltipped-n" aria-label="Paste CSS update">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewbox="0 0 16 16" fill="#eee">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 16 16" fill="#eee">
                       <path d="M15 11 1 11 8 3z"/>
                     </svg>
                   </a>
