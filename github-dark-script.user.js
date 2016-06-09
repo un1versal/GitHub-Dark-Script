@@ -21,7 +21,7 @@
 // ==/UserScript==
 /* global GM_addStyle, GM_getValue, GM_setValue, GM_info, GM_xmlhttpRequest, GM_registerMenuCommand, jscolor */
 /* eslint-disable indent, quotes */
-/* jshint esnext: true */
+/* jshint esnext:true */
 (() => {
   'use strict';
 
@@ -50,14 +50,23 @@
     type   : 'tiled',
     wrap   : false,
 
+    // toggle buttons
+    enableCodeWrap  : true,
+    enableMonospace : true,
+    // diff toggle + accordion mode
+    modeDiffToggle  : '1',
+
     // internal variables
     date         : 0,
     version      : 0,
     rawCss       : '',
     themeCss     : '',
-    processedCss : ''
+    processedCss : '',
+    last         : {}
 
   },
+
+  diffMode = [ 'disabled', 'enabled', 'accordion mode' ],
 
   // extract style & theme name
   regex = /\/\*! [^\*]+ \*\//,
@@ -164,7 +173,7 @@
     // prevent multiple change events from processing
     isUpdating = true;
 
-    let color,
+    let temp, el,
       body = $('body'),
       panel = $('#ghd-settings-inner');
 
@@ -175,45 +184,47 @@
     $('.ghd-theme', panel).value = data.theme || defaults.theme;
     $('.ghd-type', panel).value = data.type || defaults.type;
 
-    $('.ghd-enable', panel).checked = typeof data.enable === 'boolean' ? data.enable : defaults.enable;
-    $('.ghd-wrap', panel).checked = typeof data.wrap === 'boolean' ? data.wrap : defaults.wrap;
+    $('.ghd-enable', panel).checked = isBool('enable');
+    $('.ghd-wrap', panel).checked = isBool('wrap');
 
-    color = data.color || defaults.color;
-    $('.ghd-color').value = color;
+    $('.ghd-codewrap-checkbox', panel).checked = isBool('enableCodeWrap');
+    $('.ghd-monospace-checkbox', panel).checked = isBool('enableMonospace');
+
+    el = $('.ghd-diff-slider', panel);
+    temp = '' + (data.modeDiffToggle || defaults.modeDiffToggle);
+    el.value = temp;
+    toggle(el, 'enabled', temp !== '0');
+    $('.ghd-diff-mode').textContent = diffMode[temp];
+
+    // update version tooltip
+    $('.ghd-versions', panel).setAttribute('aria-label', getVersionTooltip());
+
+    temp = data.color || defaults.color;
+    $('.ghd-color').value = temp;
     // update swatch color & color picker value
-    $('#ghd-swatch').style.backgroundColor = color;
+    $('#ghd-swatch').style.backgroundColor = temp;
 
     if (picker) {
-      picker.fromString(color);
+      picker.fromString(temp);
     }
     $style.disabled = !data.enable;
 
     toggle(body, 'ghd-disabled', !data.enable);
     toggle(body, 'nowrap', !data.wrap);
 
+    if (data.enableCodeWrap !== data.lastCW ||
+      data.enableMonospace !== data.lastMS ||
+      data.modeDiffToggle !== data.lastDT) {
+
+      data.lastCW = data.enableCodeWrap;
+      data.lastMS = data.enableMonospace;
+      data.lastDT = data.modeDiffToggle;
+      updateToggles();
+    }
+
     isUpdating = false;
   }
 
-  /*
-  data = {
-    attach  : 'scroll',
-    color   : '#4183C4',
-    enable  : true,
-    font    : 'Menlo',
-    image   : 'url()',
-    tab     : 4,
-    theme   : 'Tomorrow Night',
-    type    : 'tiled',
-    wrap    : true, // code: wrap long lines
-
-    date    : 1450159200000, // last loaded package.json
-    version : '001014032',   // v1.14.32 = last stored GitHub-Dark version
-
-    rawCss       : '@-moz-document regexp("^...', // unprocessed github-dark.css
-    themeCss     : '/*! Tomorrow Night * /...',   // unprocessed theme/{name}.min.css
-    processedCss : '' // processed css, saved directly from $style
-  }
-  */
   function getStoredValues(init) {
     data = GM_getValue('data', defaults);
     if (debug) {
@@ -415,6 +426,11 @@
     data.type   = $('.ghd-type', panel).value;
     data.wrap   = $('.ghd-wrap', panel).checked;
 
+    data.enableCodeWrap  = $('.ghd-codewrap-checkbox', panel).checked;
+    data.enableMonospace = $('.ghd-monospace-checkbox', panel).checked;
+
+    data.modeDiffToggle  = $('.ghd-diff-slider', panel).value;
+
     $style.disabled = !data.enable;
 
     toggle(body, 'ghd-disabled', !data.enable);
@@ -444,6 +460,18 @@
     }
   }
 
+  function getVersionTooltip() {
+    let indx,
+      ver = [],
+      // convert stored css version from "001014049" into "1.14.49" for tooltip
+      parts = String(data.version).match(/\d{3}/g),
+      len = parts && parts.length || 0;
+    for (indx = 0; indx < len; indx++) {
+      ver.push(parseInt(parts[indx], 10));
+    }
+    return `Script v${version}\nCSS ${(ver.length ? 'v' + ver.join('.') : 'unknown')}`;
+  }
+
   function buildSettings() {
     if (debug) {
       console.log('Adding settings panel & GitHub Dark link to profile dropdown');
@@ -451,23 +479,48 @@
     // Script-specific CSS
     GM_addStyle(`
       #ghd-menu:hover { cursor:pointer }
-      #ghd-settings { position:fixed; z-index: 65535; top:0; bottom:0; left:0; right:0; opacity:0; visibility:hidden; }
+      #ghd-settings { position:fixed; z-index:65535; top:0; bottom:0; left:0; right:0; opacity:0; visibility:hidden; }
       #ghd-settings.in { opacity:1; visibility:visible; background:rgba(0,0,0,.5); }
-      #ghd-settings-inner { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:25rem; box-shadow: 0 .5rem 1rem #111; color:#c0c0c0 }
+      #ghd-settings-inner { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:25rem; box-shadow:0 .5rem 1rem #111; color:#c0c0c0 }
       #ghd-settings label { margin-left:.5rem; position:relative; top:-1px }
-      #ghd-settings-close { height: 1rem; width: 1rem; fill: #666; float:right; cursor:pointer }
-      #ghd-settings-close:hover { fill: #ccc }
-      #ghd-settings .ghd-right { float: right; padding:5px; }
-      #ghd-settings p { line-height: 25px; }
-      #ghd-swatch { width:25px; height:25px; display:inline-block; margin:3px 10px; border-radius:4px; }
-      #ghd-settings .checkbox input { margin-top: .35em }
-      #ghd-settings input, #ghd-settings select { border: #555 1px solid; }
-      #ghd-settings .ghd-attach { padding-right: 25px; }
-      #ghd-settings input[type="checkbox"] { width: 16px !important; height: 16px !important; border-radius: 3px !important; }
-      #ghd-settings .boxed-group-inner { padding: 0; }
-      #ghd-settings .ghd-footer { padding: 10px; border-top: #555 solid 1px; }
-      #ghd-settings .ghd-settings-wrapper { max-height: 60vh; overflow-y:auto; padding: 1px 10px; }
-      #ghd-settings .ghd-tab { width: 5em; }
+      #ghd-settings-close { height:1rem; width:1rem; fill:#666; float:right; cursor:pointer }
+      #ghd-settings-close:hover { fill:#ccc }
+      #ghd-settings .ghd-right { float:right; padding:5px; }
+      #ghd-settings p { line-height:22px; }
+      #ghd-settings .form-select, #ghd-settings input[type="text"] { height:30px; min-height:30px; }
+      #ghd-swatch { width:25px; height:22px; display:inline-block; margin:3px 10px; border-radius:4px; }
+      #ghd-settings input, #ghd-settings select { border:#555 1px solid; }
+      #ghd-settings .ghd-diff-mode { text-transform:capitalize; }
+      #ghd-settings .ghd-attach { padding-right:25px; }
+
+      /* toggle switches - modified from http://cssdeck.com/labs/better-css-toggle-switches */
+      #ghd-settings .ghd-checkbox input { position:absolute; z-index:-1; }
+      #ghd-settings .ghd-checkbox input ~ span { position:relative; float:right; display:block; line-height:1.6em; text-indent:3.5em; margin:.2em 0; cursor:pointer; }
+      /* need to match this outline to base-color */
+      #ghd-settings .ghd-checkbox input:focus ~ span { outline:#4183C4 1px solid; outline-offset:.2em; }
+      #ghd-settings .ghd-checkbox input ~ span:before, #ghd-settings .ghd-checkbox input ~ span:after { /* background-color:#911; */ position:absolute; display:block; top:0; bottom:0; left:0; content:"\\2718"; width:3.6em; text-indent:2.4em; color:#c31e16; border-radius:4px; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
+      #ghd-settings .ghd-checkbox input ~ span:after { content:" "; width:1.4em; top:.1em; bottom:.1em; text-align:center; text-indent:0; margin-left:.1em; color:#f88; background-color:#ddd; border-radius:4px; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
+      #ghd-settings .ghd-checkbox input:checked ~ span:before { /* background-color:#152; */ content:"\\2714"; text-indent:.5em; color:#6CC644; }
+      #ghd-settings .ghd-checkbox input:checked ~ span:after { margin-left:2.1em; color:#6CC644; }
+
+      /* range slider - modified from http://danielstern.ca/range.css/ */
+      #ghd-settings .ghd-range span { position:relative; }
+      #ghd-settings .ghd-diff-slider { -webkit-appearance:none; width:100px; margin:-1.5px 0; border:0; }
+      #ghd-settings .ghd-diff-slider::-webkit-slider-runnable-track { /* background:#911; */ width:100%; height:1.5em; border-radius:4px; cursor:pointer; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
+      #ghd-settings .ghd-diff-slider::-webkit-slider-thumb { border:0; height:1.35em; width:1.35em; border-radius:4px; background:#eee; cursor:pointer; -webkit-appearance:none; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
+      #ghd-settings .ghd-diff-slider::-moz-range-track { /* background:#911; */ width:100%; height:1.5em; cursor:pointer; border-radius:4px; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
+      #ghd-settings .ghd-diff-slider::-moz-range-thumb { border:0px; height:1.35em; width:1.35em; border-radius:4px; background:#ddd; cursor:pointer; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
+      /*
+      #ghd-settings .ghd-diff-slider.enabled::-webkit-slider-runnable-track { background:#152; }
+      #ghd-settings .ghd-diff-slider.enabled::-moz-range-track { background:#152; }
+      */
+      #ghd-settings .ghd-diff-slider ~ span:before { position:absolute; display:block; top:.15em; bottom:0; left:100px; text-indent:-.4em; content:"✘"; color:#c31e16; pointer-events:none; }
+      #ghd-settings .ghd-diff-slider.enabled ~ span:before { content:"\\2714"; text-indent:1.9em; left:0; color:#6CC644; }
+
+      #ghd-settings .boxed-group-inner { padding:0; }
+      #ghd-settings .ghd-footer { padding:10px; border-top:#555 solid 1px; }
+      #ghd-settings .ghd-settings-wrapper { max-height:60vh; overflow-y:auto; padding:4px 10px; }
+      #ghd-settings .ghd-tab { width:5em; }
       #ghd-settings .octicon { vertical-align:text-bottom !important; }
       #ghd-settings .paste-area { position:absolute; bottom:50px; top:37px; left:2px; right:2px; width:396px !important; height:-moz-calc(100% - 85px); border-style:solid; z-index:0; }
 
@@ -475,43 +528,34 @@
       icons next to a pre */
       .ghd-wrap-toggle { position:absolute; right:1.4em; margin-top:.2em; -moz-user-select:none; -webkit-user-select:none; cursor:pointer; z-index:20; }
       /* file & diff code tables */
-      .ghd-wrap-table .blob-code-inner { white-space: pre-wrap !important; word-break: break-all !important; }
-      .ghd-unwrap-table .blob-code-inner { white-space: pre !important; word-break: normal !important; }
-      .ghd-wrap-toggle > *, .ghd-monospace > *, .ghd-file-toggle > * { pointer-events:none; }
+      .ghd-wrap-table .blob-code-inner { white-space:pre-wrap !important; word-break:break-all !important; }
+      .ghd-unwrap-table .blob-code-inner { white-space:pre !important; word-break:normal !important; }
+      .ghd-wrap-toggle > *, .ghd-monospace > *, .ghd-file-toggle > * { pointer-events:none; vertical-align:middle !important; }
       /* icons inside a wrapper immediatly around a pre */
       .highlight > .ghd-wrap-toggle { right:.5em; top:.5em; margin-top:0; }
       /* icons for non-syntax highlighted code blocks; see https://github.com/gjtorikian/html-proofer/blob/master/README.md */
-      .markdown-body:not(.comment-body) .ghd-wrap-toggle:not(:first-child) { right: 3.4em; }
+      .markdown-body:not(.comment-body) .ghd-wrap-toggle:not(:first-child) { right:3.4em; }
       .ghd-wrap-toggle svg { height:1.25em; width:1.25em; fill:rgba(110,110,110,.4); }
       /* wrap disabled (red) */
       .ghd-wrap-toggle.unwrap:hover svg, .ghd-wrap-toggle:hover svg { fill:#8b0000; }
       /* wrap enabled (green) */
       body:not(.nowrap) .ghd-wrap-toggle:not(.unwrap):hover svg, .ghd-wrap-toggle.wrapped:hover svg { fill:#006400; }
       .blob-wrapper, .markdown-body pre, .markdown-body .highlight { position:relative; }
-      /* hide wrap icon when style disabled */
-      body.ghd-disabled .ghd-wrap-toggle, .ghd-collapsed-file, .file.open .data.ghd-collapsed-file { display: none; }
       /* monospace font toggle */
-      .ghd-monospace-font { font-family: Menlo, Inconsolata, "Droid Mono", monospace !important; font-size: 1em !important; }
+      .ghd-monospace-font { font-family:"${data.font}", Menlo, Inconsolata, "Droid Mono", monospace !important; font-size:1em !important; }
       /* file collapsed icon */
-      .ghd-file-collapsed svg { -webkit-transform:rotate(90deg); transform:rotate(90deg); }
+      .ghd-file-collapsed > :not(.file-header) { display:none !important; }
+      .ghd-file-collapsed .ghd-file-toggle svg { -webkit-transform:rotate(90deg); transform:rotate(90deg); }
     `);
 
     let panel, indx, theme, icon,
-      ver = [],
       opts = '',
+      ver = getVersionTooltip(),
       names = Object.keys(themes),
-      len = names.length,
-      // convert stored css version from "001014049" into "1.14.49" for tooltip
-      parts = String(data.version).match(/\d{3}/g);
+      len = names.length;
     for (indx = 0; indx < len; indx++) {
       theme = names[indx];
       opts += `<option value="${theme}">${theme}</option>`;
-    }
-    if (parts && parts.length) {
-      len = parts.length;
-      for (indx = 0; indx < len; indx++) {
-        ver.push(parseInt(parts[indx], 10));
-      }
     }
 
     // circle-question-mark icon
@@ -535,8 +579,11 @@
           <div class="boxed-group-inner">
             <form>
               <div class="ghd-settings-wrapper">
-                <p class="checkbox">
-                  <label>Enable GitHub-Dark<input class="ghd-enable ghd-right" type="checkbox"></label>
+                <p class="ghd-checkbox">
+                  <label>Enable GitHub-Dark
+                    <input class="ghd-enable ghd-right" type="checkbox">
+                    <span>&nbsp;</span>
+                  </label>
                 </p>
                 <p>
                   <label>Color:</label>
@@ -572,8 +619,30 @@
                 <p>
                   <label>Tab Size:</label> <input class="ghd-tab ghd-right" type="text">
                 </p>
-                <p class="checkbox">
-                 <label>Wrap<input class="ghd-wrap ghd-right" type="checkbox"></label>
+                <p class="ghd-checkbox">
+                  <label>Wrap
+                    <input class="ghd-wrap" type="checkbox">
+                    <span>&nbsp;</span>
+                  </label>
+                </p>
+                <h4>Toggles</h4>
+                <p class="ghd-checkbox">
+                  <label>Code Wrap
+                    <input class="ghd-codewrap-checkbox" type="checkbox">
+                    <span>&nbsp;</span>
+                  </label>
+                </p>
+                <p class="ghd-checkbox">
+                  <label>Comment Monospace Font
+                    <input class="ghd-monospace-checkbox" type="checkbox">
+                    <span>&nbsp;</span>
+                  </label>
+                </p>
+                <p class="ghd-range">
+                  <label>Diff File Collapse (<span class="ghd-diff-mode">Enabled</span>)
+                    <input class="ghd-diff-slider ghd-right" type="range" min="0" max="2" value="1">
+                    <span class="ghd-right">&nbsp;</span>
+                  </label>
                 </p>
               </div>
               <div class="ghd-footer">
@@ -589,7 +658,7 @@
                   </div>
                 </div>&nbsp;
                 <a href="#" class="ghd-reset btn btn-sm btn-danger tooltipped tooltipped-n" aria-label="Reset to defaults;&#10;there is no undo!">Reset All Settings</a>
-                <span class="ghd-right tooltipped tooltipped-n" aria-label="Script v${version}&#10;CSS ${(ver.length ? 'v' + ver.join('.') : 'unknown')}">
+                <span class="ghd-versions ghd-right tooltipped tooltipped-n" aria-label="${ver}">
                   <svg class="ghd-info" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24">
                     <path fill="#444" d="M12,9c0.82,0,1.5-0.68,1.5-1.5S12.82,6,12,6s-1.5,0.68-1.5,1.5S11.18,9,12,9z M12,1.5 C6.211,1.5,1.5,6.211,1.5,12S6.211,22.5,12,22.5S22.5,17.789,22.5,12S17.789,1.5,12,1.5z M12,19.5c-4.148,0-7.5-3.352-7.5-7.5 S7.852,4.5,12,4.5s7.5,3.352,7.5,7.5S16.148,19.5,12,19.5z M13.5,12c0-0.75-0.75-1.5-1.5-1.5s-0.75,0-1.5,0S9,11.25,9,12h1.5 c0,0,0,3.75,0,4.5S11.25,18,12,18s0.75,0,1.5,0s1.5-0.75,1.5-1.5h-1.5C13.5,16.5,13.5,12.75,13.5,12z"/>
                   </svg>
@@ -648,29 +717,52 @@
   // Add file diffs toggle
   function addFileToggle() {
     isUpdating = true;
-    var button = make({
-      el    : 'button',
-      cl4ss : 'ghd-file-toggle btn btn-sm tooltipped tooltipped-n',
-      attr  : {
-        'type' : 'button',
-        'aria-label' : 'Click to Expand or Collapse file',
-        'tabindex' : '-1'
-      },
-      html  : fileIcon
-    });
+    let firstButton,
+      button = make({
+        el    : 'button',
+        cl4ss : 'ghd-file-toggle btn btn-sm tooltipped tooltipped-n',
+        attr  : {
+          'type' : 'button',
+          'aria-label' : 'Click to Expand or Collapse file',
+          'tabindex' : '-1'
+        },
+        html  : fileIcon
+      });
     $$('#files .file-actions').forEach(el => {
       if (!$('.ghd-file-toggle', el)) {
         el.appendChild(button.cloneNode(true));
       }
     });
+    firstButton = $('.ghd-file-toggle');
+    // accordion mode = start with all but first entry collapsed
+    if (firstButton && data.modeDiffToggle === '2') {
+      toggleFile({
+        target: firstButton
+      }, true);
+    }
     isUpdating = false;
   }
 
   // Add toggle buttons after page updates
   function updateToggles() {
-    buildCodeWrap();
-    addMonospaceToggle();
-    addFileToggle();
+    if (data.enableCodeWrap) {
+      buildCodeWrap();
+    } else {
+      removeAll('.ghd-wrap-toggle');
+      toggle($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
+    }
+    if (data.enableMonospace) {
+      addMonospaceToggle();
+    } else {
+      removeAll('.ghd-monospace');
+      toggle($$('.ghd-monospace-font'), 'ghd-monospace-font', false);
+    }
+    if (data.modeDiffToggle !== '0') {
+      addFileToggle();
+    } else {
+      removeAll('.ghd-file-toggle');
+      toggle($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
+    }
   }
 
   function makeRow(vals, str) {
@@ -744,26 +836,33 @@
     }
   }
 
-  function toggleFile(el, shift) {
+  function toggleSibs(target, state) {
+    let el,
+      isCollapsed = state || target.classList.contains('ghd-file-collapsed'),
+      toggles = document.querySelectorAll('.file'),
+      indx = toggles.length;
+    while (indx--) {
+      el = toggles[indx];
+      if (el !== target) {
+        el.classList[isCollapsed ? 'add' : 'remove']('ghd-file-collapsed');
+      }
+    }
+  }
+
+  function toggleFile(event, init) {
     isUpdating = true;
-    toggle(el, 'ghd-file-collapsed');
-
-    let tmp = closest(el, '.file-header'),
-      block = nextAll(tmp, '.blob-wrapper, .render-wrapper, .image, .rich-diff');
-    // toggle view of file or image; "image" class added to "Diff suppressed..."
-    toggle(block, 'ghd-collapsed-file');
-
-    // shift+click toggle all files!
-    if (shift) {
-      let isCollapsed = el.classList.contains('ghd-file-collapsed');
-      $$('.ghd-file-toggle').forEach(tmp => {
-        if (tmp !== el) {
-          toggle(tmp, 'ghd-file-collapsed', isCollapsed);
-          tmp = closest(tmp, '.file-header');
-          tmp = nextAll(tmp, '.blob-wrapper, .render-wrapper, .image, .rich-diff');
-          toggle(tmp, 'ghd-collapsed-file', isCollapsed);
-        }
-      });
+    let el = closest(event.target, '.file');
+    if (data.modeDiffToggle === '2') {
+      if (!init) {
+        el.classList.toggle('ghd-file-collapsed');
+      }
+      toggleSibs(el, true);
+    } else {
+      el.classList.toggle('ghd-file-collapsed');
+      // shift+click toggle all files!
+      if (event.shiftKey) {
+        toggleSibs(el);
+      }
     }
     isUpdating = false;
   }
@@ -911,19 +1010,19 @@
     // Toggles
     on($('body'), 'click', event => {
       let target = event.target;
-      if (target.classList.contains('ghd-wrap-toggle')) {
+      if (data.enableCodeWrap && target.classList.contains('ghd-wrap-toggle')) {
         // **** CODE WRAP TOGGLE ****
         event.stopPropagation();
         toggleCodeWrap(target);
-      } else if (target.classList.contains('ghd-monospace')) {
+      } else if (data.enableMonospace && target.classList.contains('ghd-monospace')) {
         // **** MONOSPACE FONT TOGGLE ****
         event.stopPropagation();
         toggleMonospace(target);
         return false;
-      } else if (target.classList.contains('ghd-file-toggle')) {
+      } else if (data.modeDiffToggle !== '0' && target.classList.contains('ghd-file-toggle')) {
         // **** CODE DIFF COLLAPSE TOGGLE ****
         event.stopPropagation();
-        toggleFile(target, event.shiftKey);
+        toggleFile(event);
       }
     });
 
@@ -980,6 +1079,9 @@
 
     $style.disabled = !data.enable;
     data.lastTheme = data.theme;
+    data.lastCW = data.enableCodeWrap;
+    data.lastMS = data.enableMonospace;
+    data.lastDT = data.modeDiffToggle;
 
     // only load package.json once a day, or after a forced update
     if ((new Date().getTime() > data.date + delay) || data.version === 0) {
@@ -1019,6 +1121,10 @@
   });
 
   /* utility functions */
+  function isBool(name) {
+    let val = data[name];
+    return typeof val === 'boolean' ? val : defaults[name];
+  }
   function $(str, el) {
     return (el || document).querySelector(str);
   }
@@ -1032,15 +1138,6 @@
       }
     }
     return null;
-  }
-  function nextAll(el, selector) {
-    let siblings = [];
-    while ((el = el.nextElementSibling)) {
-      if (el && el.matches(selector)) {
-        siblings.push(el);
-      }
-    }
-    return siblings;
   }
   function closest(el, selector) {
     while (el && el.nodeName !== 'BODY' && !el.matches(selector)) {
@@ -1064,6 +1161,11 @@
       $(obj.appendTo).appendChild(el);
     }
     return el;
+  }
+  function removeAll(selector) {
+    $$(selector).forEach(el => {
+      el.parentNode.removeChild(el);
+    });
   }
   function on(els, name, callback) {
     els = Array.isArray(els) ? els : [els];
@@ -1091,8 +1193,10 @@
   // Add GM options
   GM_registerMenuCommand("GitHub Dark Script debug logging", () => {
     let val = prompt('Toggle GitHub Dark Script debug log (true/false):', !debug);
-    debug = /^t/.test(val);
-    GM_setValue('debug', debug);
+    if (val) {
+      debug = /^t/.test(val);
+      GM_setValue('debug', debug);
+    }
   });
 
 })();
