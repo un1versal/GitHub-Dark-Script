@@ -190,11 +190,10 @@
     $('.ghd-codewrap-checkbox', panel).checked = isBool('enableCodeWrap');
     $('.ghd-monospace-checkbox', panel).checked = isBool('enableMonospace');
 
-    el = $('.ghd-diff-slider', panel);
+    el = $('.ghd-diff-select', panel);
     temp = '' + (data.modeDiffToggle || defaults.modeDiffToggle);
     el.value = temp;
     toggle(el, 'enabled', temp !== '0');
-    $('.ghd-diff-mode').textContent = diffMode[temp];
 
     // update version tooltip
     $('.ghd-versions', panel).setAttribute('aria-label', getVersionTooltip());
@@ -429,7 +428,7 @@
     data.enableCodeWrap  = $('.ghd-codewrap-checkbox', panel).checked;
     data.enableMonospace = $('.ghd-monospace-checkbox', panel).checked;
 
-    data.modeDiffToggle  = $('.ghd-diff-slider', panel).value;
+    data.modeDiffToggle  = $('.ghd-diff-select', panel).value;
 
     $style.disabled = !data.enable;
 
@@ -490,33 +489,8 @@
       #ghd-settings .form-select, #ghd-settings input[type="text"] { height:30px; min-height:30px; }
       #ghd-swatch { width:25px; height:22px; display:inline-block; margin:3px 10px; border-radius:4px; }
       #ghd-settings input, #ghd-settings select { border:#555 1px solid; }
-      #ghd-settings .ghd-diff-mode { text-transform:capitalize; }
-      #ghd-settings .ghd-attach { padding-right:25px; }
-
-      /* toggle switches - modified from http://cssdeck.com/labs/better-css-toggle-switches */
-      #ghd-settings .ghd-checkbox input { position:absolute; z-index:-1; }
-      #ghd-settings .ghd-checkbox input ~ span { position:relative; float:right; display:block; line-height:1.6em; text-indent:3.5em; margin:.2em 0; cursor:pointer; }
-      /* need to match this outline to base-color */
-      #ghd-settings .ghd-checkbox input:focus ~ span { outline:#4183C4 1px solid; outline-offset:.2em; }
-      #ghd-settings .ghd-checkbox input ~ span:before, #ghd-settings .ghd-checkbox input ~ span:after { /* background-color:#911; */ position:absolute; display:block; top:0; bottom:0; left:0; content:"\\2718"; width:3.6em; text-indent:2.4em; color:#c31e16; border-radius:4px; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
-      #ghd-settings .ghd-checkbox input ~ span:after { content:" "; width:1.4em; top:.1em; bottom:.1em; text-align:center; text-indent:0; margin-left:.1em; color:#f88; background-color:#ddd; border-radius:4px; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
-      #ghd-settings .ghd-checkbox input:checked ~ span:before { /* background-color:#152; */ content:"\\2714"; text-indent:.5em; color:#6CC644; }
-      #ghd-settings .ghd-checkbox input:checked ~ span:after { margin-left:2.1em; color:#6CC644; }
-
-      /* range slider - modified from http://danielstern.ca/range.css/ */
-      #ghd-settings .ghd-range span { position:relative; }
-      #ghd-settings .ghd-diff-slider { -webkit-appearance:none; width:100px; margin:-1.5px 0; border:0; }
-      #ghd-settings .ghd-diff-slider::-webkit-slider-runnable-track { /* background:#911; */ width:100%; height:1.5em; border-radius:4px; cursor:pointer; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
-      #ghd-settings .ghd-diff-slider::-webkit-slider-thumb { border:0; height:1.35em; width:1.35em; border-radius:4px; background:#eee; cursor:pointer; -webkit-appearance:none; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
-      #ghd-settings .ghd-diff-slider::-moz-range-track { /* background:#911; */ width:100%; height:1.5em; cursor:pointer; border-radius:4px; box-shadow:inset 0 0.2em 0 rgba(0,0,0,0.4); }
-      #ghd-settings .ghd-diff-slider::-moz-range-thumb { border:0px; height:1.35em; width:1.35em; border-radius:4px; background:#ddd; cursor:pointer; box-shadow:inset 0 -0.2em 0 rgba(0,0,0,0.3); }
-      /*
-      #ghd-settings .ghd-diff-slider.enabled::-webkit-slider-runnable-track { background:#152; }
-      #ghd-settings .ghd-diff-slider.enabled::-moz-range-track { background:#152; }
-      */
-      #ghd-settings .ghd-diff-slider ~ span:before { position:absolute; display:block; top:.15em; bottom:0; left:100px; text-indent:-.4em; content:"✘"; color:#c31e16; pointer-events:none; }
-      #ghd-settings .ghd-diff-slider.enabled ~ span:before { content:"\\2714"; text-indent:1.9em; left:0; color:#6CC644; }
-
+      #ghd-settings .ghd-attach, #ghd-settings .ghd-diff-select { padding-right:25px; }
+      #ghd-settings input[type="checkbox"] { margin-top:3px; width: 16px !important; height: 16px !important; border-radius: 3px !important; }
       #ghd-settings .boxed-group-inner { padding:0; }
       #ghd-settings .ghd-footer { padding:10px; border-top:#555 solid 1px; }
       #ghd-settings .ghd-settings-wrapper { max-height:60vh; overflow-y:auto; padding:4px 10px; }
@@ -580,10 +554,7 @@
             <form>
               <div class="ghd-settings-wrapper">
                 <p class="ghd-checkbox">
-                  <label>Enable GitHub-Dark
-                    <input class="ghd-enable ghd-right" type="checkbox">
-                    <span>&nbsp;</span>
-                  </label>
+                  <label>Enable GitHub-Dark<input class="ghd-enable ghd-right" type="checkbox"></label>
                 </p>
                 <p>
                   <label>Color:</label>
@@ -620,29 +591,22 @@
                   <label>Tab Size:</label> <input class="ghd-tab ghd-right" type="text">
                 </p>
                 <p class="ghd-checkbox">
-                  <label>Wrap
-                    <input class="ghd-wrap" type="checkbox">
-                    <span>&nbsp;</span>
-                  </label>
+                  <label>Wrap<input class="ghd-wrap ghd-right" type="checkbox"></label>
                 </p>
                 <h4>Toggles</h4>
                 <p class="ghd-checkbox">
-                  <label>Code Wrap
-                    <input class="ghd-codewrap-checkbox" type="checkbox">
-                    <span>&nbsp;</span>
-                  </label>
+                  <label>Code Wrap<input class="ghd-codewrap-checkbox ghd-right" type="checkbox"></label>
                 </p>
                 <p class="ghd-checkbox">
-                  <label>Comment Monospace Font
-                    <input class="ghd-monospace-checkbox" type="checkbox">
-                    <span>&nbsp;</span>
-                  </label>
+                  <label>Comment Monospace Font<input class="ghd-monospace-checkbox ghd-right" type="checkbox"></label>
                 </p>
                 <p class="ghd-range">
-                  <label>Diff File Collapse (<span class="ghd-diff-mode">Enabled</span>)
-                    <input class="ghd-diff-slider ghd-right" type="range" min="0" max="2" value="1">
-                    <span class="ghd-right">&nbsp;</span>
-                  </label>
+                  <label>Diff File Collapse</label>
+                  <select class="ghd-diff-select ghd-right form-select">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                    <option value="2">Accordion</option>
+                  </select>
                 </p>
               </div>
               <div class="ghd-footer">
