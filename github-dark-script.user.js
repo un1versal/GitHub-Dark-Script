@@ -193,7 +193,7 @@
     el = $('.ghd-diff-select', panel);
     temp = '' + (data.modeDiffToggle || defaults.modeDiffToggle);
     el.value = temp;
-    toggle(el, 'enabled', temp !== '0');
+    toggleClass(el, 'enabled', temp !== '0');
 
     // update version tooltip
     $('.ghd-versions', panel).setAttribute('aria-label', getVersionTooltip());
@@ -208,8 +208,8 @@
     }
     $style.disabled = !data.enable;
 
-    toggle(body, 'ghd-disabled', !data.enable);
-    toggle(body, 'nowrap', !data.wrap);
+    toggleClass(body, 'ghd-disabled', !data.enable);
+    toggleClass(body, 'nowrap', !data.wrap);
 
     if (data.enableCodeWrap !== data.lastCW ||
       data.enableMonospace !== data.lastMS ||
@@ -432,8 +432,8 @@
 
     $style.disabled = !data.enable;
 
-    toggle(body, 'ghd-disabled', !data.enable);
-    toggle(body, 'nowrap', !data.wrap);
+    toggleClass(body, 'ghd-disabled', !data.enable);
+    toggleClass(body, 'nowrap', !data.wrap);
 
     if (testing) {
       processStyle();
@@ -496,7 +496,7 @@
       #ghd-settings .ghd-settings-wrapper { max-height:60vh; overflow-y:auto; padding:4px 10px; }
       #ghd-settings .ghd-tab { width:5em; }
       #ghd-settings .octicon { vertical-align:text-bottom !important; }
-      #ghd-settings .paste-area { position:absolute; bottom:50px; top:37px; left:2px; right:2px; width:396px !important; height:-moz-calc(100% - 85px); border-style:solid; z-index:0; }
+      #ghd-settings .ghd-paste-area { position:absolute; bottom:50px; top:37px; left:2px; right:2px; width:396px !important; height:-moz-calc(100% - 85px); border-style:solid; z-index:0; }
 
       /* code wrap toggle: https://gist.github.com/silverwind/6c1701f56e62204cc42b
       icons next to a pre */
@@ -617,8 +617,8 @@
                       <path d="M15 11 1 11 8 3z"/>
                     </svg>
                   </a>
-                  <div class="paste-area-content" aria-hidden="true" style="display:none">
-                    <textarea class="paste-area" placeholder="Paste GitHub-Dark Style here!"></textarea>
+                  <div class="ghd-paste-area-content" aria-hidden="true" style="display:none">
+                    <textarea class="ghd-paste-area" placeholder="Paste GitHub-Dark Style here!"></textarea>
                   </div>
                 </div>&nbsp;
                 <a href="#" class="ghd-reset btn btn-sm btn-danger tooltipped tooltipped-n" aria-label="Reset to defaults;&#10;there is no undo!">Reset All Settings</a>
@@ -713,19 +713,19 @@
       buildCodeWrap();
     } else {
       removeAll('.ghd-wrap-toggle');
-      toggle($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
+      toggleClass($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
     }
     if (data.enableMonospace) {
       addMonospaceToggle();
     } else {
       removeAll('.ghd-monospace');
-      toggle($$('.ghd-monospace-font'), 'ghd-monospace-font', false);
+      toggleClass($$('.ghd-monospace-font'), 'ghd-monospace-font', false);
     }
     if (data.modeDiffToggle !== '0') {
       addFileToggle();
     } else {
       removeAll('.ghd-file-toggle');
-      toggle($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
+      toggleClass($$('.ghd-file-collapsed'), 'ghd-file-collapsed', false);
     }
   }
 
@@ -739,13 +739,13 @@
 
   // add keyboard shortcut to help menu (press "?")
   function buildShortcut() {
-    let el,
-      row1 = makeRow(keyboardOpen.split('+'), 'GitHub-Dark: open settings'),
-      row2 = makeRow(keyboardToggle.split('+'), 'GitHub-Dark: toggle style');
-    if (!$('.ghd-shortcut')) {
+    let row,
       el = $('.keyboard-mappings tbody');
-      el.appendChild(row1);
-      el.appendChild(row2);
+    if (el && !$('.ghd-shortcut')) {
+      row = makeRow(keyboardOpen.split('+'), 'GitHub-Dark: open settings');
+      el.appendChild(row);
+      row = makeRow(keyboardToggle.split('+'), 'GitHub-Dark: toggle style');
+      el.appendChild(row);
     }
   }
 
@@ -771,10 +771,10 @@
       } else {
         css = code.classList.contains('ghd-unwrap-table');
       }
-      toggle(code, 'ghd-wrap-table', css);
-      toggle(code, 'ghd-unwrap-table', !css);
-      toggle(el, 'wrapped', css);
-      toggle(el, 'unwrap', !css);
+      toggleClass(code, 'ghd-wrap-table', css);
+      toggleClass(code, 'ghd-unwrap-table', !css);
+      toggleClass(el, 'wrapped', css);
+      toggleClass(el, 'unwrap', !css);
     } else {
       css = (code.getAttribute('style') || '').trim();
       if (css === '') {
@@ -783,8 +783,8 @@
         css = wrapCss[css === wrapCss.wrapped ? 'unwrap' : 'wrapped'];
       }
       code.setAttribute('style', css);
-      toggle(el, 'wrapped', css === wrapCss.wrapped);
-      toggle(el, 'unwrap', css === wrapCss.unwrap);
+      toggleClass(el, 'wrapped', css === wrapCss.wrapped);
+      toggleClass(el, 'unwrap', css === wrapCss.unwrap);
     }
   }
 
@@ -793,10 +793,10 @@
       // single comment
       textarea = $('.comment-form-textarea', tmp);
     if (textarea) {
-      toggle(textarea, 'ghd-monospace-font');
+      toggleClass(textarea, 'ghd-monospace-font');
       textarea.focus();
       tmp = textarea.classList.contains('ghd-monospace-font');
-      toggle(el, 'ghd-icon-active', tmp);
+      toggleClass(el, 'ghd-icon-active', tmp);
     }
   }
 
@@ -838,7 +838,7 @@
 
     // finish initialization
     $('#ghd-settings-inner .ghd-enable').checked = data.enable;
-    toggle($('body'), 'ghd-disabled', !data.enable);
+    toggleClass($('body'), 'ghd-disabled', !data.enable);
 
     // Create our menu entry
     menu = make({
@@ -914,7 +914,8 @@
       event.stopPropagation();
     });
 
-    on($('.ghd-reset', panel), 'click', () => {
+    on($('.ghd-reset', panel), 'click', event => {
+      event.preventDefault();
       isUpdating = true;
       // pass true to reset values
       setStoredValues(true);
@@ -924,7 +925,6 @@
       updatePanel();
       // update style
       updateStyle();
-      return false;
     });
 
     on($$('input[type="text"]', panel), 'focus', function() {
@@ -938,15 +938,16 @@
       }
     });
 
-    on($('.ghd-update', panel), 'click', () => {
+    on($('.ghd-update', panel), 'click', event => {
+      event.preventDefault();
       forceUpdate();
-      return false;
     });
 
-    on($('.ghd-textarea-toggle', panel), 'click', function() {
+    on($('.ghd-textarea-toggle', panel), 'click', function(event) {
+      event.preventDefault();
       let hidden, el;
       this.classList.remove('selected');
-      el = next(this, '.paste-area-content');
+      el = next(this, '.ghd-paste-area-content');
       if (el) {
         hidden = el.style.display === 'none';
         el.style.display = hidden ? '' : 'none';
@@ -960,7 +961,7 @@
       return false;
     });
 
-    on($('.paste-area-content', panel), 'paste', event => {
+    on($('.ghd-paste-area-content', panel), 'paste', event => {
       let toggle = $('.ghd-textarea-toggle', panel),
         textarea = event.target;
       setTimeout(() => {
@@ -1107,7 +1108,7 @@
     while (el && el.nodeName !== 'BODY' && !el.matches(selector)) {
       el = el.parentNode;
     }
-    return el.matches(selector) ? el : [];
+    return el && el.matches(selector) ? el : [];
   }
   function make(obj) {
     let key,
@@ -1140,16 +1141,18 @@
       });
     });
   }
-  function toggle(els, cl4ss, flag) {
+  function toggleClass(els, cl4ss, flag) {
     els = Array.isArray(els) ? els : [els];
     els.forEach(el => {
-      if (typeof flag === 'undefined') {
-        flag = !el.classList.contains(cl4ss);
-      }
-      if (flag) {
-        el.classList.add(cl4ss);
-      } else {
-        el.classList.remove(cl4ss);
+      if (el) {
+        if (typeof flag === 'undefined') {
+          flag = !el.classList.contains(cl4ss);
+        }
+        if (flag) {
+          el.classList.add(cl4ss);
+        } else {
+          el.classList.remove(cl4ss);
+        }
       }
     });
   }
